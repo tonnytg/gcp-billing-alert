@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -14,13 +15,9 @@ const (
 )
 
 // Get receive an url, you can send headers and timeout parameters for request.
-func Get(url string, headers []string, timeOut int) ([]byte, error) {
+func Get(url string, timeOut int) ([]byte, error) {
 
 	fmt.Println("url:", url)
-	for i, v := range headers {
-		fmt.Println(i, v)
-	}
-
 	// client run everything
 	client := &http.Client{
 		CheckRedirect: nil,
@@ -40,10 +37,11 @@ func Get(url string, headers []string, timeOut int) ([]byte, error) {
 		return nil, err
 	}
 
-	// loop to add each header in request
-	for _, v := range headers {
-		request.Header.Add("If-None-Match", v)
-	}
+	token := os.Getenv("GCP_TOKEN")
+	bearer := fmt.Sprintf("Bearer %s", token)
+
+	request.Header.Add("Authorization", bearer)
+	request.Header.Add("Accept", "Application/json")
 
 	// execute call and return *http.Response type
 	response, err := client.Do(request)
